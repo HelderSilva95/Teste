@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Factory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+            <p class="text-muted">Bem-vindo, {{ user.full_name }}</p>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-lg-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Ordens Pendentes</h6>
+                            <h2 class="mb-0">{{ stats.work_orders_pending }}</h2>
+                        </div>
+                        <i class="bi bi-clipboard-x" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-lg-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Em Produção</h6>
+                            <h2 class="mb-0">{{ stats.work_orders_in_progress }}</h2>
+                        </div>
+                        <i class="bi bi-play-circle-fill" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-lg-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Produções Ativas</h6>
+                            <h2 class="mb-0">{{ stats.productions_active }}</h2>
+                        </div>
+                        <i class="bi bi-gear-fill" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-lg-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Material Disponível</h6>
+                            <h2 class="mb-0">{{ stats.inventory_available }}</h2>
+                        </div>
+                        <i class="bi bi-box-seam" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-lg-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">NC Abertas</h6>
+                            <h2 class="mb-0">{{ stats.nc_open }}</h2>
+                        </div>
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Produções Ativas -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-play-circle"></i> Produções em Andamento</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_productions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ordem</th>
+                                    <th>Máquina</th>
+                                    <th>Operador</th>
+                                    <th>Início</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prod in active_productions %}
+                                <tr>
+                                    <td><a href="/work-orders/{{ prod.work_order_id }}">{{ prod.work_order.order_number }}</a></td>
+                                    <td>{{ prod.machine.name }}</td>
+                                    <td>{{ prod.operator1.full_name }}</td>
+                                    <td>{{ prod.start_time.strftime('%d/%m %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">Nenhuma produção ativa</p>
+                    {% endif %}
+                    <a href="/production" class="btn btn-sm btn-success w-100 mt-2">Ver Todas</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ordens Prioritárias -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-star-fill"></i> Ordens Prioritárias</h5>
+                </div>
+                <div class="card-body">
+                    {% if priority_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Produto</th>
+                                    <th>Prioridade</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in priority_orders %}
+                                <tr>
+                                    <td><a href="/work-orders/{{ order.id }}">{{ order.order_number }}</a></td>
+                                    <td>{{ order.product_code }}</td>
+                                    <td><span class="badge bg-danger">{{ order.priority }}</span></td>
+                                    <td><span class="badge bg-{{ 'warning' if order.status.value == 'pending' else 'success' }}">{{ order.status.value }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">Nenhuma ordem pendente</p>
+                    {% endif %}
+                    <a href="/work-orders" class="btn btn-sm btn-primary w-100 mt-2">Ver Todas</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Não-Conformidades Recentes -->
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Não-Conformidades Recentes</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_ncs %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Título</th>
+                                    <th>Tipo</th>
+                                    <th>Severidade</th>
+                                    <th>Status</th>
+                                    <th>Reportado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for nc in recent_ncs %}
+                                <tr>
+                                    <td><a href="/non-compliance/{{ nc.id }}">{{ nc.nc_number }}</a></td>
+                                    <td>{{ nc.title }}</td>
+                                    <td>{{ nc.nc_type.value }}</td>
+                                    <td><span class="badge bg-{{ 'danger' if nc.severity.value == 'critical' else 'warning' if nc.severity.value == 'high' else 'info' }}">{{ nc.severity.value }}</span></td>
+                                    <td>{{ nc.status.value }}</td>
+                                    <td>{{ nc.reported_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">Nenhuma não-conformidade</p>
+                    {% endif %}
+                    <a href="/non-compliance" class="btn btn-sm btn-warning w-100 mt-2">Ver Todas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

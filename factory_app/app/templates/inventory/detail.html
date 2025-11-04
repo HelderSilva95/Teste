@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Item {{ item.qr_code }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2>Item: {{ item.qr_code }}</h2>
+    <div class="row mt-3">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5>{{ item.material_name }}</h5>
+                    <div class="row mt-3">
+                        <div class="col-6"><strong>Tipo:</strong> {{ item.material_type.value }}</div>
+                        <div class="col-6"><strong>Status:</strong> <span class="badge bg-success">{{ item.status.value }}</span></div>
+                        <div class="col-6 mt-2"><strong>Cor:</strong> {{ item.color or '-' }}</div>
+                        <div class="col-6 mt-2"><strong>Acabamento:</strong> {{ item.finish or '-' }}</div>
+                        {% if item.length %}<div class="col-12 mt-2"><strong>Dimensões:</strong> {{ item.length }} × {{ item.width }} × {{ item.thickness }} cm</div>{% endif %}
+                        <div class="col-6 mt-2"><strong>Localização:</strong> {{ item.location or '-' }}</div>
+                        <div class="col-6 mt-2"><strong>Quantidade:</strong> {{ item.quantity }} {{ item.unit }}</div>
+                    </div>
+                    <div class="mt-3"><a href="/inventory" class="btn btn-secondary">Voltar</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">QR Code</div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                    <div class="mt-2"><a href="/inventory/{{ item.id }}/qr-code" download="qr_{{ item.qr_code }}.png" class="btn btn-sm btn-primary">Download</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

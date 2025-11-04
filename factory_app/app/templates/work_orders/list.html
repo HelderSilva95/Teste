@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Ordens de Trabalho - Factory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="bi bi-clipboard-check"></i> Ordens de Trabalho</h1>
+        </div>
+        <div class="col-auto">
+            {% if user.role.value in ['supervisor', 'gestor'] %}
+            <a href="/work-orders/new" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nova Ordem
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if work_orders %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Máquina</th>
+                            <th>Prioridade</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in work_orders %}
+                        <tr>
+                            <td><strong>{{ order.order_number }}</strong></td>
+                            <td>{{ order.product_code }}</td>
+                            <td>{{ order.quantity_produced }} / {{ order.quantity_planned }} {{ order.unit }}</td>
+                            <td>{{ order.machine.name if order.machine else '-' }}</td>
+                            <td><span class="badge bg-danger">{{ order.priority }}</span></td>
+                            <td>
+                                <span class="badge bg-{{ 'warning' if order.status.value == 'pending' else 'success' if order.status.value == 'in_progress' else 'secondary' }}">
+                                    {{ order.status.value }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="/work-orders/{{ order.id }}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-muted">Nenhuma ordem de trabalho encontrada</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

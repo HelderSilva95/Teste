@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Produção #{{ production.id }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2>Produção #{{ production.id }}</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6"><strong>Ordem:</strong> {{ production.work_order.order_number }}</div>
+                <div class="col-md-6"><strong>Status:</strong> <span class="badge bg-{{ 'success' if production.status.value == 'in_progress' else 'warning' if production.status.value == 'paused' else 'secondary' }}">{{ production.status.value }}</span></div>
+                <div class="col-md-6 mt-2"><strong>Máquina:</strong> {{ production.machine.name }}</div>
+                <div class="col-md-6 mt-2"><strong>Operador:</strong> {{ production.operator1.full_name }}</div>
+                <div class="col-md-6 mt-2"><strong>Início:</strong> {{ production.start_time.strftime('%d/%m/%Y %H:%M') }}</div>
+                {% if production.end_time %}<div class="col-md-6 mt-2"><strong>Fim:</strong> {{ production.end_time.strftime('%d/%m/%Y %H:%M') }}</div>{% endif %}
+            </div>
+
+            <div class="mt-4">
+                <a href="/production" class="btn btn-secondary">Voltar</a>
+                {% if production.status.value == 'in_progress' %}
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pauseModal">Pausar</button>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#completeModal">Completar</button>
+                {% elif production.status.value == 'paused' %}
+                <form method="POST" action="/production/{{ production.id }}/resume" style="display:inline;">
+                    <button type="submit" class="btn btn-success">Retomar</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pausar -->
+<div class="modal fade" id="pauseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/production/{{ production.id }}/pause">
+                <div class="modal-header"><h5>Pausar Produção</h5></div>
+                <div class="modal-body">
+                    <label class="form-label">Motivo da Pausa *</label>
+                    <textarea class="form-control" name="pause_reason" required rows="3"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Pausar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Completar -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/production/{{ production.id }}/complete">
+                <div class="modal-header"><h5>Completar Produção</h5></div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade Entrada *</label>
+                        <input type="number" step="0.01" class="form-control" name="quantity_input" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade Saída *</label>
+                        <input type="number" step="0.01" class="form-control" name="quantity_output" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas Finais</label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Completar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

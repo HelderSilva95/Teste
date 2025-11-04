@@ -1,0 +1,121 @@
+================================================================================
+  FACTORY WORK TRACKING SYSTEM - Notas Importantes
+================================================================================
+
+PORTA DA APLICAÇÃO:
+-------------------
+A aplicação está configurada para usar a porta 8080 (padrão).
+
+As portas 5000 e 7082 estão evitadas conforme solicitado.
+
+Para alterar a porta, edite o arquivo .env:
+    APP_PORT=8080  (altere para a porta desejada)
+
+
+EXECUÇÃO DA APLICAÇÃO:
+---------------------
+Para executar tudo de uma vez:
+
+    Opção 1 (Windows): Duplo clique em start.bat
+    Opção 2 (Manual): python run.py
+    Opção 3 (VS Code): Pressione F5
+
+
+PRIMEIRA EXECUÇÃO:
+-----------------
+1. Execute: install.bat (Windows) ou siga README.md
+2. Configure .env com credenciais SQL Server
+3. Crie base de dados: CREATE DATABASE factory_db;
+4. Execute: python init_database.py
+5. Execute: python run.py
+6. Acesse: http://localhost:8080
+
+
+UTILIZADORES MÚLTIPLOS:
+----------------------
+A aplicação suporta 10+ utilizadores simultâneos.
+Cada utilizador deve fazer login com suas próprias credenciais.
+
+
+CREDENCIAIS PADRÃO:
+------------------
+Gestor:     admin / admin123
+Supervisor: supervisor / super123
+Operador:   operador1 / oper123
+
+⚠️ ALTERAR ESTAS SENHAS EM PRODUÇÃO!
+
+
+MÓDULOS DISPONÍVEIS:
+-------------------
+✓ Dashboard - Visão geral
+✓ Ordens de Trabalho - Gestão de ordens
+✓ Produção - Registo de produção (início/pausa/fim)
+✓ Inventário - Gestão de chapas/maciços com QR codes
+✓ Não-Conformidades - Registo de problemas
+
+
+FUNCIONALIDADES PRINCIPAIS:
+--------------------------
+✓ Autenticação com 3 níveis de acesso
+✓ Registo de tempo (início/fim/pausa/setup)
+✓ Quantidade entrada/saída
+✓ Múltiplos operadores (até 2 por produção)
+✓ QR codes para inventário (geração e leitura)
+✓ Relatórios e exportação
+✓ Interface responsiva (touch + mouse)
+
+
+INTEGRAÇÃO SQL SERVER:
+---------------------
+A aplicação está preparada para:
+- Importar ordens de trabalho do SQL Server externo
+- Exportar dados de produção e custos
+- Sincronizar com sistemas externos
+
+
+TECNOLOGIAS:
+-----------
+Backend: FastAPI (Python)
+Frontend: HTML5 + Bootstrap 5 + JavaScript
+Database: SQL Server
+QR Codes: python-qrcode + html5-qrcode
+
+
+ESTRUTURA DE PASTAS:
+-------------------
+factory_app/
+├── app/              # Aplicação principal
+│   ├── models/       # Modelos de dados
+│   ├── routes/       # Rotas/Endpoints
+│   ├── templates/    # HTML templates
+│   └── static/       # CSS, JS
+├── config/           # Configurações
+├── utils/            # Utilitários
+├── run.py           # Script principal
+└── .env             # Configurações
+
+
+SUPORTE:
+--------
+Para dúvidas ou problemas:
+1. Consulte README.md
+2. Consulte QUICK_START.md
+3. Verifique logs da aplicação
+
+
+DESENVOLVIDO PARA:
+-----------------
+Sistema de registo de trabalho em fábrica de transformação
+de pedra natural (chapas e maciços).
+
+Suporta todo o processo produtivo:
+- Planeamento
+- Produção
+- Controlo de stock
+- Qualidade (não-conformidades)
+
+
+================================================================================
+Factory Work Tracking System v1.0
+================================================================================

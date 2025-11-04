@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Não-Conformidades{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col"><h1><i class="bi bi-exclamation-triangle"></i> Não-Conformidades</h1></div>
+        <div class="col-auto"><a href="/non-compliance/new" class="btn btn-warning"><i class="bi bi-plus-circle"></i> Nova NC</a></div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if non_compliances %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr><th>Número</th><th>Título</th><th>Tipo</th><th>Severidade</th><th>Status</th><th>Reportado em</th><th>Ações</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for nc in non_compliances %}
+                        <tr>
+                            <td><strong>{{ nc.nc_number }}</strong></td>
+                            <td>{{ nc.title }}</td>
+                            <td><span class="badge bg-secondary">{{ nc.nc_type.value }}</span></td>
+                            <td><span class="badge bg-{{ 'danger' if nc.severity.value == 'critical' else 'warning' if nc.severity.value == 'high' else 'info' }}">{{ nc.severity.value }}</span></td>
+                            <td><span class="badge bg-{{ 'success' if nc.status.value == 'resolved' else 'warning' }}">{{ nc.status.value }}</span></td>
+                            <td>{{ nc.reported_at.strftime('%d/%m/%Y') }}</td>
+                            <td><a href="/non-compliance/{{ nc.id }}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-muted">Nenhuma não-conformidade registrada</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}NC {{ nc.nc_number }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2>Não-Conformidade: {{ nc.nc_number }}</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6"><strong>Título:</strong> {{ nc.title }}</div>
+                <div class="col-md-6"><strong>Status:</strong> <span class="badge bg-warning">{{ nc.status.value }}</span></div>
+                <div class="col-md-6 mt-2"><strong>Tipo:</strong> {{ nc.nc_type.value }}</div>
+                <div class="col-md-6 mt-2"><strong>Severidade:</strong> <span class="badge bg-danger">{{ nc.severity.value }}</span></div>
+                <div class="col-md-6 mt-2"><strong>Reportado por:</strong> {{ nc.reported_by.full_name }}</div>
+                <div class="col-md-6 mt-2"><strong>Reportado em:</strong> {{ nc.reported_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                <div class="col-12 mt-3"><strong>Descrição:</strong><br>{{ nc.description }}</div>
+                {% if nc.root_cause %}<div class="col-12 mt-2"><strong>Causa Raiz:</strong><br>{{ nc.root_cause }}</div>{% endif %}
+                {% if nc.corrective_action %}<div class="col-12 mt-2"><strong>Ação Corretiva:</strong><br>{{ nc.corrective_action }}</div>{% endif %}
+            </div>
+
+            <hr class="my-4">
+            <h5>Atualizar NC</h5>
+            <form method="POST" action="/non-compliance/{{ nc.id }}/update">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="open" {{ 'selected' if nc.status.value == 'open' else '' }}>Aberta</option>
+                            <option value="in_analysis" {{ 'selected' if nc.status.value == 'in_analysis' else '' }}>Em Análise</option>
+                            <option value="in_correction" {{ 'selected' if nc.status.value == 'in_correction' else '' }}>Em Correção</option>
+                            <option value="resolved" {{ 'selected' if nc.status.value == 'resolved' else '' }}>Resolvida</option>
+                            <option value="closed" {{ 'selected' if nc.status.value == 'closed' else '' }}>Fechada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Atribuir a</label>
+                        <select class="form-select" name="assigned_to_id">
+                            <option value="">Ninguém</option>
+                            {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if nc.assigned_to and u.id == nc.assigned_to.id else '' }}>{{ u.full_name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Causa Raiz</label>
+                        <textarea class="form-control" name="root_cause" rows="2">{{ nc.root_cause or '' }}</textarea>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Ação Corretiva</label>
+                        <textarea class="form-control" name="corrective_action" rows="2">{{ nc.corrective_action or '' }}</textarea>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Ação Preventiva</label>
+                        <textarea class="form-control" name="preventive_action" rows="2">{{ nc.preventive_action or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Atualizar</button>
+                    <a href="/non-compliance" class="btn btn-secondary">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

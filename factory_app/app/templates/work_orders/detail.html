@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Ordem {{ work_order.order_number }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2>Ordem de Trabalho: {{ work_order.order_number }}</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6"><strong>Produto:</strong> {{ work_order.product_code }}</div>
+                <div class="col-md-6"><strong>Status:</strong> <span class="badge bg-primary">{{ work_order.status.value }}</span></div>
+                <div class="col-md-6 mt-2"><strong>Quantidade:</strong> {{ work_order.quantity_produced }} / {{ work_order.quantity_planned }}</div>
+                <div class="col-md-6 mt-2"><strong>Máquina:</strong> {{ work_order.machine.name if work_order.machine else '-' }}</div>
+                <div class="col-12 mt-2"><strong>Descrição:</strong> {{ work_order.product_description }}</div>
+            </div>
+            <div class="mt-3">
+                <a href="/work-orders" class="btn btn-secondary">Voltar</a>
+                <a href="/production/start?work_order_id={{ work_order.id }}" class="btn btn-success">Iniciar Produção</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
