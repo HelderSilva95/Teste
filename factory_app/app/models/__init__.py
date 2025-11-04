@@ -6,6 +6,7 @@ from app.models.machine import Machine
 from app.models.work_order import WorkOrder, WorkOrderStatus
 from app.models.inventory import InventoryItem, MaterialType, MaterialStatus
 from app.models.production_log import ProductionLog, ProductionStatus
+from app.models.production_pause import ProductionPause
 from app.models.material_consumption import MaterialConsumption
 from app.models.non_compliance import (
     NonCompliance,
@@ -25,6 +26,7 @@ __all__ = [
     "MaterialStatus",
     "ProductionLog",
     "ProductionStatus",
+    "ProductionPause",
     "MaterialConsumption",
     "NonCompliance",
     "NonComplianceType",

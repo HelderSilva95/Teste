@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block title %}Minha Produção{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quick-stats {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    .production-card {
+        border-left: 4px solid #667eea;
+        margin-bottom: 1rem;
+    }
+    .production-card.paused {
+        border-left-color: #ffc107;
+    }
+    .timer-mini {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: #667eea;
+    }
+    .action-buttons .btn {
+        min-width: 120px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1><i class="bi bi-person-workspace"></i> Minha Produção</h1>
+            <p class="text-muted">{{ user.full_name }}</p>
+        </div>
+        <div class="col-auto">
+            <a href="/production/start" class="btn btn-success btn-lg">
+                <i class="bi bi-play-circle"></i> Iniciar Produção
+            </a>
+        </div>
+    </div>
+
+    <!-- Estatísticas do Dia -->
+    <div class="quick-stats">
+        <div class="row">
+            <div class="col-md-3 stat-item">
+                <div class="stat-value">{{ my_active_productions|length }}</div>
+                <div class="stat-label">Produções Ativas</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-value">{{ my_completed_today|length }}</div>
+                <div class="stat-label">Completadas Hoje</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-value">{{ "%.1f"|format(total_produced) }}</div>
+                <div class="stat-label">Total Produzido</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-value">{{ (total_time_minutes // 60)|int }}h {{ total_time_minutes % 60 }}m</div>
+                <div class="stat-label">Tempo Total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Produções Ativas -->
+    {% if my_active_productions %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-gear-fill"></i> Minhas Produções Ativas</h5>
+        </div>
+        <div class="card-body">
+            {% for prod in my_active_productions %}
+            <div class="card production-card {{ 'paused' if prod.status.value == 'paused' else '' }}">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h5 class="mb-1">{{ prod.work_order.order_number }}</h5>
+                            <small class="text-muted">{{ prod.work_order.product_code }}</small>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <i class="bi bi-gear" style="font-size: 1.5rem;"></i><br>
+                            <small>{{ prod.machine.name }}</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="timer-mini production-timer"
+                                 id="timer-{{ prod.id }}"
+                                 data-start-time="{{ prod.start_time.isoformat() }}"
+                                 data-pause-time="{{ prod.pause_time or 0 }}"
+                                 data-status="{{ prod.status.value }}">
+                                00:00:00
+                            </div>
+                            <small class="text-muted">
+                                {% if prod.status.value == 'paused' %}
+                                    <span class="badge bg-warning">PAUSADO</span>
+                                {% else %}
+                                    <span class="badge bg-success">EM PROGRESSO</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-4 action-buttons text-end">
+                            <a href="/production/{{ prod.id }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye"></i> Detalhes
+                            </a>
+                            {% if prod.status.value == 'in_progress' %}
+                            <button class="btn btn-warning btn-sm" onclick="quickPause({{ prod.id }})">
+                                <i class="bi bi-pause"></i> Pausar
+                            </button>
+                            <button class="btn btn-success btn-sm" onclick="quickComplete({{ prod.id }})">
+                                <i class="bi bi-check-circle"></i> Completar
+                            </button>
+                            {% elif prod.status.value == 'paused' %}
+                            <form method="POST" action="/production/{{ prod.id }}/resume" style="display:inline;">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-play"></i> Retomar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Não tens produções ativas no momento.
+        <a href="/production/start" class="alert-link">Clica aqui para iniciar uma produção</a>.
+    </div>
+    {% endif %}
+
+    <!-- Produções Completadas Hoje -->
+    {% if my_completed_today %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-check-circle"></i> Completadas Hoje</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ordem</th>
+                            <th>Máquina</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Duração</th>
+                            <th>Produzido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prod in my_completed_today %}
+                        <tr>
+                            <td><a href="/production/{{ prod.id }}">{{ prod.work_order.order_number }}</a></td>
+                            <td>{{ prod.machine.name }}</td>
+                            <td>{{ prod.start_time.strftime('%H:%M') }}</td>
+                            <td>{{ prod.end_time.strftime('%H:%M') if prod.end_time else '-' }}</td>
+                            <td>
+                                {% if prod.end_time %}
+                                    {% set duration = ((prod.end_time - prod.start_time).total_seconds() / 60)|int - (prod.pause_time or 0) %}
+                                    {{ (duration // 60)|int }}h {{ duration % 60 }}m
+                                {% else %}-{% endif %}
+                            </td>
+                            <td>{{ prod.quantity_output or 0 }} {{ prod.unit }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Pausar Rápido -->
+<div class="modal fade" id="quickPauseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="quickPauseForm">
+                <div class="modal-header">
+                    <h5>Pausar Produção</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Motivo da Pausa *</label>
+                    <select class="form-select mb-2" id="pauseReasonSelect">
+                        <option value="">Seleciona ou escreve...</option>
+                        <option value="Aguardar material">Aguardar material</option>
+                        <option value="Problema técnico">Problema técnico</option>
+                        <option value="Pausa para refeição">Pausa para refeição</option>
+                        <option value="Mudança de ferramenta">Mudança de ferramenta</option>
+                        <option value="Outro">Outro...</option>
+                    </select>
+                    <textarea class="form-control" name="pause_reason" id="pauseReasonText" required rows="2"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Pausar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Completar Rápido -->
+<div class="modal fade" id="quickCompleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="quickCompleteForm">
+                <div class="modal-header">
+                    <h5>Completar Produção</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade Entrada *</label>
+                        <input type="number" step="0.01" class="form-control form-control-lg" name="quantity_input" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade Saída *</label>
+                        <input type="number" step="0.01" class="form-control form-control-lg" name="quantity_output" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Completar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/production-timer.js"></script>
+<script>
+// Funções rápidas para modais
+function quickPause(productionId) {
+    document.getElementById('quickPauseForm').action = `/production/${productionId}/pause`;
+    new bootstrap.Modal(document.getElementById('quickPauseModal')).show();
+}
+
+function quickComplete(productionId) {
+    document.getElementById('quickCompleteForm').action = `/production/${productionId}/complete`;
+    new bootstrap.Modal(document.getElementById('quickCompleteModal')).show();
+}
+
+// Auto-preencher textarea com opção selecionada
+document.getElementById('pauseReasonSelect').addEventListener('change', function() {
+    if (this.value && this.value !== 'Outro') {
+        document.getElementById('pauseReasonText').value = this.value;
+    } else {
+        document.getElementById('pauseReasonText').value = '';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+<!-- Componente de Paginação Reutilizável -->
+{% if pagination and pagination.total_pages > 1 %}
+<nav aria-label="Paginação">
+    <ul class="pagination justify-content-center">
+        <!-- Botão Anterior -->
+        <li class="page-item {{ 'disabled' if not pagination.has_prev else '' }}">
+            {% if pagination.has_prev %}
+            <a class="page-link" href="?page={{ pagination.page - 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+            {% else %}
+            <span class="page-link" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+            </span>
+            {% endif %}
+        </li>
+
+        <!-- Primeira página -->
+        {% if page_range and page_range[0] > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}">1</a>
+        </li>
+        {% if page_range[0] > 2 %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+        {% endif %}
+
+        <!-- Páginas numeradas -->
+        {% for p in page_range %}
+        <li class="page-item {{ 'active' if p == pagination.page else '' }}">
+            {% if p == pagination.page %}
+            <span class="page-link">{{ p }}</span>
+            {% else %}
+            <a class="page-link" href="?page={{ p }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ p }}</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+
+        <!-- Última página -->
+        {% if page_range and page_range[-1] < pagination.total_pages %}
+        {% if page_range[-1] < pagination.total_pages - 1 %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ pagination.total_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ pagination.total_pages }}</a>
+        </li>
+        {% endif %}
+
+        <!-- Botão Próximo -->
+        <li class="page-item {{ 'disabled' if not pagination.has_next else '' }}">
+            {% if pagination.has_next %}
+            <a class="page-link" href="?page={{ pagination.page + 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Próximo">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+            {% else %}
+            <span class="page-link" aria-label="Próximo">
+                <span aria-hidden="true">&raquo;</span>
+            </span>
+            {% endif %}
+        </li>
+    </ul>
+
+    <!-- Informação de paginação -->
+    <div class="text-center text-muted small">
+        Mostrando {{ ((pagination.page - 1) * pagination.per_page) + 1 }} a
+        {{ min(pagination.page * pagination.per_page, pagination.total) }} de
+        {{ pagination.total }} registos
+    </div>
+</nav>
+{% endif %}

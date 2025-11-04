@@ -39,9 +39,16 @@
                             <i class="bi bi-clipboard-check"></i> Ordens de Trabalho
                         </a>
                     </li>
+                    {% if user.role.value == 'operador' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/production/my-production">
+                            <i class="bi bi-person-workspace"></i> Minha Produção
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="/production">
-                            <i class="bi bi-play-circle"></i> Produção
+                            <i class="bi bi-play-circle"></i> Produção {% if user.role.value != 'operador' %}Geral{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">

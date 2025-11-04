@@ -1,7 +1,7 @@
 """
 Rotas de Ordens de Trabalho
 """
-from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -13,6 +13,7 @@ from app.models.user import User
 from app.models.work_order import WorkOrder, WorkOrderStatus
 from app.models.machine import Machine
 from app.routes.auth import require_auth, require_role
+from utils.pagination import paginate, get_pagination_range
 
 router = APIRouter(prefix="/work-orders", tags=["work_orders"])
 templates = Jinja2Templates(directory="app/templates")
@@ -22,20 +23,35 @@ templates = Jinja2Templates(directory="app/templates")
 async def list_work_orders(
     request: Request,
     status: Optional[str] = None,
+    page: int = Query(1, ge=1, description="Número da página"),
+    per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
     user: User = Depends(require_auth),
     db: Session = Depends(get_db)
 ):
-    """Lista todas as ordens de trabalho"""
+    """Lista todas as ordens de trabalho com paginação"""
     query = db.query(WorkOrder)
 
     if status:
         query = query.filter(WorkOrder.status == status)
 
-    work_orders = query.order_by(WorkOrder.priority.asc(), WorkOrder.planned_start.asc()).all()
+    query = query.order_by(WorkOrder.priority.asc(), WorkOrder.planned_start.asc())
+
+    # Paginar
+    paginated = paginate(query, page=page, per_page=per_page)
+
+    # Obter range de páginas
+    page_range = get_pagination_range(paginated.page, paginated.total_pages)
 
     return templates.TemplateResponse(
         "work_orders/list.html",
-        {"request": request, "work_orders": work_orders, "user": user}
+        {
+            "request": request,
+            "work_orders": paginated.items,
+            "pagination": paginated,
+            "page_range": page_range,
+            "status_filter": status,
+            "user": user
+        }
     )
 
 

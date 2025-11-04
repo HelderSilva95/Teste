@@ -13,6 +13,7 @@ from app.models.user import User
 from app.models.production_log import ProductionLog, ProductionStatus
 from app.models.work_order import WorkOrder
 from app.models.machine import Machine
+from app.models.production_pause import ProductionPause
 from app.routes.auth import require_auth
 
 router = APIRouter(prefix="/production", tags=["production"])
@@ -43,6 +44,49 @@ async def production_dashboard(
             "user": user,
             "active_productions": active_productions,
             "pending_orders": pending_orders
+        }
+    )
+
+
+@router.get("/my-production", response_class=HTMLResponse)
+async def my_production_dashboard(
+    request: Request,
+    user: User = Depends(require_auth),
+    db: Session = Depends(get_db)
+):
+    """Dashboard do Operador - Minhas Produções"""
+    # Minhas produções ativas (onde sou operador 1 ou 2)
+    my_active_productions = db.query(ProductionLog).filter(
+        (ProductionLog.operator1_id == user.id) | (ProductionLog.operator2_id == user.id),
+        ProductionLog.status.in_([ProductionStatus.IN_PROGRESS, ProductionStatus.PAUSED])
+    ).all()
+
+    # Minhas produções completadas hoje
+    from datetime import timedelta
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    my_completed_today = db.query(ProductionLog).filter(
+        (ProductionLog.operator1_id == user.id) | (ProductionLog.operator2_id == user.id),
+        ProductionLog.status == ProductionStatus.COMPLETED,
+        ProductionLog.end_time >= today_start
+    ).all()
+
+    # Estatísticas do dia
+    total_produced = sum(p.quantity_output or 0 for p in my_completed_today)
+    total_time_minutes = sum(
+        int((p.end_time - p.start_time).total_seconds() / 60) - (p.pause_time or 0)
+        for p in my_completed_today if p.end_time
+    )
+
+    return templates.TemplateResponse(
+        "production/my_production.html",
+        {
+            "request": request,
+            "user": user,
+            "my_active_productions": my_active_productions,
+            "my_completed_today": my_completed_today,
+            "total_produced": total_produced,
+            "total_time_minutes": total_time_minutes
         }
     )
 
@@ -149,9 +193,16 @@ async def pause_production(
     if not production:
         raise HTTPException(status_code=404, detail="Produção não encontrada")
 
-    production.status = ProductionStatus.PAUSED
-    production.pause_reason = pause_reason
+    # Criar registo de pausa
+    pause = ProductionPause(
+        production_log_id=production_id,
+        pause_start=datetime.utcnow(),
+        reason=pause_reason
+    )
 
+    production.status = ProductionStatus.PAUSED
+
+    db.add(pause)
     db.commit()
 
     return RedirectResponse(url="/production", status_code=303)
@@ -168,6 +219,19 @@ async def resume_production(
 
     if not production:
         raise HTTPException(status_code=404, detail="Produção não encontrada")
+
+    # Finalizar pausa ativa (se existir)
+    active_pause = db.query(ProductionPause).filter(
+        ProductionPause.production_log_id == production_id,
+        ProductionPause.pause_end == None
+    ).first()
+
+    if active_pause:
+        active_pause.pause_end = datetime.utcnow()
+
+    # Calcular tempo total de pausas
+    total_pause_minutes = sum(p.duration_minutes for p in production.pauses)
+    production.pause_time = total_pause_minutes
 
     production.status = ProductionStatus.IN_PROGRESS
 
@@ -191,10 +255,23 @@ async def complete_production(
     if not production:
         raise HTTPException(status_code=404, detail="Produção não encontrada")
 
+    # Finalizar pausa ativa se existir
+    active_pause = db.query(ProductionPause).filter(
+        ProductionPause.production_log_id == production_id,
+        ProductionPause.pause_end == None
+    ).first()
+
+    if active_pause:
+        active_pause.pause_end = datetime.utcnow()
+
+    # Calcular tempo total de pausas
+    total_pause_minutes = sum(p.duration_minutes for p in production.pauses)
+
     production.status = ProductionStatus.COMPLETED
     production.end_time = datetime.utcnow()
     production.quantity_input = quantity_input
     production.quantity_output = quantity_output
+    production.pause_time = total_pause_minutes
     if notes:
         production.notes = notes
 

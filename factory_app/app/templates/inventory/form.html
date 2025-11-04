@@ -9,7 +9,14 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">QR Code *</label>
-                        <input type="text" class="form-control" name="qr_code" required>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="qr_code_input" name="qr_code" placeholder="Escanear ou digitar" required>
+                            <button type="button" class="btn btn-primary" id="scanQRButton">
+                                <i class="bi bi-qr-code-scan"></i> Escanear
+                            </button>
+                        </div>
+                        <!-- Scanner QR (escondido inicialmente) -->
+                        <div id="qr-reader" style="display: none; margin-top: 10px; width: 100%;"></div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Tipo de Material *</label>
@@ -71,4 +78,14 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/qr-scanner.js"></script>
+<script>
+// Inicializar scanner QR para o input de QR code
+document.addEventListener('DOMContentLoaded', function() {
+    initSimpleScanner('scanQRButton', 'qr-reader', 'qr_code_input');
+});
+</script>
 {% endblock %}
