@@ -15,6 +15,7 @@ from app.models.work_order import WorkOrder
 from app.models.machine import Machine
 from app.models.production_pause import ProductionPause
 from app.routes.auth import require_auth
+from utils.logger import log_production_event, log_user_action, log_error
 
 router = APIRouter(prefix="/production", tags=["production"])
 templates = Jinja2Templates(directory="app/templates")
@@ -135,30 +136,47 @@ async def start_production(
     db: Session = Depends(get_db)
 ):
     """Inicia uma produção"""
-    work_order = db.query(WorkOrder).filter(WorkOrder.id == work_order_id).first()
-    if not work_order:
-        raise HTTPException(status_code=404, detail="Ordem de trabalho não encontrada")
+    try:
+        work_order = db.query(WorkOrder).filter(WorkOrder.id == work_order_id).first()
+        if not work_order:
+            log_user_action(user.id, user.username, "START_PRODUCTION_FAILED",
+                          f"WorkOrder ID:{work_order_id} não encontrada")
+            raise HTTPException(status_code=404, detail="Ordem de trabalho não encontrada")
 
-    production_log = ProductionLog(
-        work_order_id=work_order_id,
-        machine_id=machine_id,
-        operator1_id=operator1_id,
-        operator2_id=operator2_id if operator2_id else None,
-        start_time=datetime.utcnow(),
-        setup_time=setup_time,
-        status=ProductionStatus.IN_PROGRESS,
-        notes=notes
-    )
+        production_log = ProductionLog(
+            work_order_id=work_order_id,
+            machine_id=machine_id,
+            operator1_id=operator1_id,
+            operator2_id=operator2_id if operator2_id else None,
+            start_time=datetime.utcnow(),
+            setup_time=setup_time,
+            status=ProductionStatus.IN_PROGRESS,
+            notes=notes
+        )
 
-    # Atualizar status da ordem de trabalho
-    if work_order.status.value == "pending":
-        work_order.status = "in_progress"
-        work_order.actual_start = datetime.utcnow()
+        # Atualizar status da ordem de trabalho
+        if work_order.status.value == "pending":
+            work_order.status = "in_progress"
+            work_order.actual_start = datetime.utcnow()
 
-    db.add(production_log)
-    db.commit()
+        db.add(production_log)
+        db.commit()
+        db.refresh(production_log)
 
-    return RedirectResponse(url="/production", status_code=303)
+        # Log sucesso
+        log_production_event(production_log.id, "STARTED",
+                           f"WorkOrder:{work_order.order_number}, Machine:{machine_id}, Operator:{operator1_id}")
+        log_user_action(user.id, user.username, "START_PRODUCTION",
+                      f"Production ID:{production_log.id} iniciada")
+
+        return RedirectResponse(url="/production", status_code=303)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_error(e, f"start_production - User:{user.username}, WO:{work_order_id}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao iniciar produção: {str(e)}")
 
 
 @router.get("/{production_id}", response_class=HTMLResponse)
@@ -205,6 +223,10 @@ async def pause_production(
     db.add(pause)
     db.commit()
 
+    # Log
+    log_production_event(production_id, "PAUSED", f"Motivo: {pause_reason}")
+    log_user_action(user.id, user.username, "PAUSE_PRODUCTION", f"Production ID:{production_id}")
+
     return RedirectResponse(url="/production", status_code=303)
 
 
@@ -236,6 +258,10 @@ async def resume_production(
     production.status = ProductionStatus.IN_PROGRESS
 
     db.commit()
+
+    # Log
+    log_production_event(production_id, "RESUMED", f"Total pause time: {total_pause_minutes}min")
+    log_user_action(user.id, user.username, "RESUME_PRODUCTION", f"Production ID:{production_id}")
 
     return RedirectResponse(url="/production", status_code=303)
 
@@ -280,10 +306,19 @@ async def complete_production(
     work_order.quantity_produced += quantity_output
 
     # Se atingiu a quantidade planejada, marcar como completa
+    wo_completed = False
     if work_order.quantity_produced >= work_order.quantity_planned:
         work_order.status = "completed"
         work_order.actual_end = datetime.utcnow()
+        wo_completed = True
 
     db.commit()
+
+    # Log
+    details = f"Input:{quantity_input}, Output:{quantity_output}, Pause:{total_pause_minutes}min"
+    if wo_completed:
+        details += ", WorkOrder COMPLETED"
+    log_production_event(production_id, "COMPLETED", details)
+    log_user_action(user.id, user.username, "COMPLETE_PRODUCTION", f"Production ID:{production_id}")
 
     return RedirectResponse(url="/production", status_code=303)

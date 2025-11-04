@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Importação de Dados{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="bi bi-download"></i> Importação de Dados</h2>
+            <p class="text-muted">Importar dados de sistemas externos</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Mensagens -->
+    {% if request.query_params.get('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> {{ request.query_params.get('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('error') %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> {{ request.query_params.get('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Status da Conexão -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-database"></i> SQL Server Externo
+                    </h5>
+                    <p class="mb-2">
+                        <strong>Servidor:</strong> {{ external_server }}
+                    </p>
+                    <p class="mb-3">
+                        <strong>Status:</strong>
+                        {% if connection_ok %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle"></i> Conectado
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger">
+                            <i class="bi bi-x-circle"></i> Não conectado
+                        </span>
+                        {% endif %}
+                    </p>
+                    <form method="post" action="/import/test-connection">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-arrow-repeat"></i> Testar Conexão
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-info-circle"></i> Configuração
+                    </h6>
+                    <p class="small mb-0">
+                        Configure os parâmetros de conexão no arquivo <code>.env</code>:
+                    </p>
+                    <ul class="small mb-0 mt-2">
+                        <li>EXTERNAL_SQL_SERVER</li>
+                        <li>EXTERNAL_SQL_DATABASE</li>
+                        <li>EXTERNAL_SQL_USER</li>
+                        <li>EXTERNAL_SQL_PASSWORD</li>
+                    </ul>
+                    <p class="small text-muted mt-2 mb-0">
+                        Após configurar, reinicie a aplicação.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Importações Disponíveis -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">Importações Disponíveis</h4>
+        </div>
+
+        <!-- Ordens de Trabalho -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-clipboard-check"></i> Ordens de Trabalho
+                    </h5>
+                    <p class="card-text">
+                        Importa ordens de trabalho pendentes do sistema externo.
+                    </p>
+
+                    <form method="post" action="/import/work-orders" class="mt-3">
+                        <div class="mb-3">
+                            <label for="days_back" class="form-label">
+                                Importar ordens dos últimos:
+                            </label>
+                            <select name="days_back" id="days_back" class="form-select">
+                                <option value="1">1 dia</option>
+                                <option value="3">3 dias</option>
+                                <option value="7" selected>7 dias</option>
+                                <option value="14">14 dias</option>
+                                <option value="30">30 dias</option>
+                            </select>
+                        </div>
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            {% if not connection_ok %}disabled{% endif %}
+                        >
+                            <i class="bi bi-download"></i> Importar Ordens
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Customizada (Futuro) -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 border-secondary">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">
+                        <i class="bi bi-code-square"></i> Query Customizada
+                    </h5>
+                    <p class="card-text text-muted">
+                        Execute queries SQL customizadas no servidor externo.
+                    </p>
+                    <p class="small">
+                        <span class="badge bg-secondary">Em breve</span>
+                    </p>
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="bi bi-play"></i> Executar Query
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documentação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-book"></i> Como usar
+                    </h6>
+                    <ol class="mb-0">
+                        <li>Configure as credenciais do SQL Server externo no arquivo <code>.env</code></li>
+                        <li>Reinicie a aplicação para carregar as novas configurações</li>
+                        <li>Teste a conexão usando o botão "Testar Conexão"</li>
+                        <li>Selecione o tipo de dados que deseja importar</li>
+                        <li>Configure os parâmetros (se necessário) e clique em "Importar"</li>
+                    </ol>
+                    <p class="small text-muted mt-3 mb-0">
+                        <strong>Nota:</strong> As queries SQL utilizadas para importação podem ser
+                        personalizadas no arquivo <code>utils/sql_import.py</code>.
+                        Consulte a documentação técnica para mais detalhes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

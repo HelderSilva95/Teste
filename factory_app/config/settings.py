@@ -24,6 +24,16 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
 
+    # External Data Sources
+    EXTERNAL_SQL_SERVER: Optional[str] = None
+    EXTERNAL_SQL_DATABASE: Optional[str] = None
+    EXTERNAL_SQL_USER: Optional[str] = None
+    EXTERNAL_SQL_PASSWORD: Optional[str] = None
+
+    # Machine Data Reading
+    MACHINE_DATA_PATH: Optional[str] = None
+    MACHINE_DATA_POLL_INTERVAL: int = 60
+
     @property
     def database_url(self) -> str:
         """Retorna a URL de conexão do banco de dados"""
