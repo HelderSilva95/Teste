@@ -2,6 +2,7 @@
 Modelo de Utilizador
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from config.database import Base
 import enum
@@ -11,6 +12,7 @@ class UserRole(enum.Enum):
     OPERADOR = "operador"
     SUPERVISOR = "supervisor"
     GESTOR = "gestor"
+    ADMIN = "admin"
 
 
 class User(Base):
@@ -25,6 +27,10 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relacionamentos Many-to-Many
+    sectors = relationship("Sector", secondary="user_sectors", back_populates="users")
+    machines = relationship("Machine", secondary="user_machines", back_populates="users")
 
     def __repr__(self):
         return f"<User {self.username} ({self.role.value})>"

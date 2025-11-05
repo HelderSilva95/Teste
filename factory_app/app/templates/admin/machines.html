@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Máquinas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2><i class="bi bi-cpu"></i> Máquinas</h2>
+                    <p class="text-muted mb-0">Gestão de máquinas e estações de trabalho</p>
+                </div>
+                <div>
+                    <a href="/admin" class="btn btn-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                    <a href="/admin/machines/new" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Nova Máquina
+                    </a>
+                </div>
+            </div>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Mensagens -->
+    {% if request.query_params.get('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> {{ request.query_params.get('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('error') %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> {{ request.query_params.get('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Tabela de Máquinas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if machines %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nome</th>
+                                    <th>Setor</th>
+                                    <th>Localização</th>
+                                    <th>Utilizadores</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for machine in machines %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ machine.code }}</strong>
+                                    </td>
+                                    <td>{{ machine.name }}</td>
+                                    <td>
+                                        {% if machine.sector %}
+                                        <span class="badge bg-success">
+                                            {{ machine.sector.name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">Sem setor</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if machine.location %}
+                                        <i class="bi bi-geo-alt"></i> {{ machine.location }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ machine.users|length }} utilizadores
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if machine.is_active %}
+                                        <span class="badge bg-success">Ativa</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="/admin/machines/{{ machine.id }}/edit"
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="confirmDelete({{ machine.id }}, '{{ machine.name }}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-cpu" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Nenhuma máquina registada</p>
+                        <a href="/admin/machines/new" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Criar Primeira Máquina
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Eliminação -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja eliminar a máquina <strong id="machineName"></strong>?</p>
+                <p class="text-danger mb-0">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser revertida.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(machineId, machineName) {
+    document.getElementById('machineName').textContent = machineName;
+    document.getElementById('deleteForm').action = `/admin/machines/${machineId}/delete`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

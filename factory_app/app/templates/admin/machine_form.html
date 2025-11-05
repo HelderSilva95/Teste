@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}{% if machine %}Editar Máquina{% else %}Nova Máquina{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>
+                    <i class="bi bi-cpu"></i>
+                    {% if machine %}Editar Máquina{% else %}Nova Máquina{% endif %}
+                </h2>
+                <a href="/admin/machines" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+            <hr>
+
+            {% if request.query_params.get('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> {{ request.query_params.get('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post"
+                          action="{% if machine %}/admin/machines/{{ machine.id }}/edit{% else %}/admin/machines/new{% endif %}">
+
+                        <div class="mb-3">
+                            <label for="code" class="form-label">
+                                Código <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="code" name="code"
+                                   value="{{ machine.code if machine else '' }}" required maxlength="50"
+                                   placeholder="Ex: M001, CORTE-01, POL-A">
+                            <small class="form-text text-muted">Código único da máquina</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">
+                                Nome <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                   value="{{ machine.name if machine else '' }}" required maxlength="100"
+                                   placeholder="Ex: Serra de Corte A1">
+                            <small class="form-text text-muted">Nome descritivo da máquina</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="Descrição técnica da máquina...">{{ machine.description if machine else '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sector_id" class="form-label">Setor</label>
+                            <select class="form-select" id="sector_id" name="sector_id">
+                                <option value="">Sem setor</option>
+                                {% for sector in sectors %}
+                                <option value="{{ sector.id }}"
+                                        {% if machine and machine.sector_id == sector.id %}selected{% endif %}>
+                                    {{ sector.name }} ({{ sector.code }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Setor onde a máquina está localizada</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Localização</label>
+                            <input type="text" class="form-control" id="location" name="location"
+                                   value="{{ machine.location if machine else '' }}" maxlength="100"
+                                   placeholder="Ex: Pavilhão A, Linha 2, Posição 5">
+                            <small class="form-text text-muted">Localização física da máquina</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                       {% if not machine or machine.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">Máquina ativa</label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/admin/machines" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i>
+                                {% if machine %}Atualizar{% else %}Criar{% endif %} Máquina
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if machine %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Informações Adicionais</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Utilizadores Associados:</strong>
+                        <span class="badge bg-secondary">{{ machine.users|length }}</span>
+                    </p>
+                    {% if machine.users %}
+                    <ul class="small mb-0">
+                        {% for user in machine.users[:5] %}
+                        <li>{{ user.full_name }} ({{ user.username }})</li>
+                        {% endfor %}
+                        {% if machine.users|length > 5 %}
+                        <li class="text-muted">... e mais {{ machine.users|length - 5 }}</li>
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+                    <hr class="my-2">
+                    <small class="text-muted">
+                        Criado em: {{ machine.created_at.strftime('%d/%m/%Y %H:%M') }}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

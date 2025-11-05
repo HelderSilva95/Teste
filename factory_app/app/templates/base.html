@@ -61,10 +61,17 @@
                             <i class="bi bi-exclamation-triangle"></i> Não-Conformidades
                         </a>
                     </li>
-                    {% if user.role.value in ['admin', 'supervisor'] %}
+                    {% if user.role.value in ['admin', 'gestor', 'supervisor'] %}
                     <li class="nav-item">
                         <a class="nav-link" href="/import">
                             <i class="bi bi-download"></i> Importação
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if user.role.value in ['admin', 'gestor'] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin">
+                            <i class="bi bi-gear-fill"></i> Administração
                         </a>
                     </li>
                     {% endif %}
@@ -73,9 +80,13 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle"></i> {{ user.full_name }}
+                            <span class="badge bg-light text-dark ms-1">{{ user.role.value }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Perfil</a></li>
+                            {% if user.role.value in ['admin', 'gestor'] %}
+                            <li><a class="dropdown-item" href="/admin"><i class="bi bi-gear"></i> Administração</a></li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/auth/logout"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
                         </ul>

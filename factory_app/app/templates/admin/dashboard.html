@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Administração{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="bi bi-gear-fill"></i> Administração</h2>
+            <p class="text-muted">Gestão de setores, máquinas e utilizadores</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Utilizadores</h6>
+                            <h2 class="mb-0">{{ active_users }}/{{ total_users }}</h2>
+                            <small>Ativos/Total</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-people-fill" style="font-size: 3rem; opacity: 0.5;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="/admin/users" class="text-white text-decoration-none">
+                        Ver todos <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Setores</h6>
+                            <h2 class="mb-0">{{ total_sectors }}</h2>
+                            <small>Registados</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-building" style="font-size: 3rem; opacity: 0.5;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="/admin/sectors" class="text-white text-decoration-none">
+                        Ver todos <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Máquinas</h6>
+                            <h2 class="mb-0">{{ active_machines }}/{{ total_machines }}</h2>
+                            <small>Ativas/Total</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-cpu-fill" style="font-size: 3rem; opacity: 0.5;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="/admin/machines" class="text-white text-decoration-none">
+                        Ver todas <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu de Ações -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">Gestão</h4>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-people"></i> Utilizadores
+                    </h5>
+                    <p class="card-text">
+                        Gerir utilizadores, permissões e associações a setores/máquinas.
+                    </p>
+                    <a href="/admin/users" class="btn btn-primary">
+                        <i class="bi bi-list"></i> Ver Utilizadores
+                    </a>
+                    <a href="/admin/users/new" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Novo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-building"></i> Setores
+                    </h5>
+                    <p class="card-text">
+                        Gerir setores da fábrica e suas localizações.
+                    </p>
+                    <a href="/admin/sectors" class="btn btn-primary">
+                        <i class="bi bi-list"></i> Ver Setores
+                    </a>
+                    <a href="/admin/sectors/new" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Novo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-cpu"></i> Máquinas
+                    </h5>
+                    <p class="card-text">
+                        Gerir máquinas, estações de trabalho e equipamentos.
+                    </p>
+                    <a href="/admin/machines" class="btn btn-primary">
+                        <i class="bi bi-list"></i> Ver Máquinas
+                    </a>
+                    <a href="/admin/machines/new" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Nova
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

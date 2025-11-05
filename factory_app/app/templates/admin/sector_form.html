@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{% if sector %}Editar Setor{% else %}Novo Setor{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>
+                    <i class="bi bi-building"></i>
+                    {% if sector %}Editar Setor{% else %}Novo Setor{% endif %}
+                </h2>
+                <a href="/admin/sectors" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+            <hr>
+
+            <!-- Mensagens de erro -->
+            {% if request.query_params.get('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> {{ request.query_params.get('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <!-- Formulário -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="post"
+                          action="{% if sector %}/admin/sectors/{{ sector.id }}/edit{% else %}/admin/sectors/new{% endif %}">
+
+                        <div class="mb-3">
+                            <label for="code" class="form-label">
+                                Código <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="code"
+                                   name="code"
+                                   value="{{ sector.code if sector else '' }}"
+                                   required
+                                   maxlength="50"
+                                   placeholder="Ex: CORTE, POLIMENTO, ACABAMENTO">
+                            <small class="form-text text-muted">
+                                Código único do setor (até 50 caracteres)
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">
+                                Nome <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="name"
+                                   name="name"
+                                   value="{{ sector.name if sector else '' }}"
+                                   required
+                                   maxlength="100"
+                                   placeholder="Ex: Setor de Corte">
+                            <small class="form-text text-muted">
+                                Nome descritivo do setor (até 100 caracteres)
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição</label>
+                            <textarea class="form-control"
+                                      id="description"
+                                      name="description"
+                                      rows="3"
+                                      placeholder="Descrição detalhada do setor...">{{ sector.description if sector else '' }}</textarea>
+                            <small class="form-text text-muted">
+                                Descrição opcional das atividades do setor
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Localização</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="location"
+                                   name="location"
+                                   value="{{ sector.location if sector else '' }}"
+                                   maxlength="100"
+                                   placeholder="Ex: Pavilhão A, Piso 1">
+                            <small class="form-text text-muted">
+                                Localização física do setor na fábrica
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       id="is_active"
+                                       name="is_active"
+                                       {% if not sector or sector.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    Setor ativo
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Setores inativos não aparecem para seleção
+                            </small>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/admin/sectors" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i>
+                                {% if sector %}Atualizar{% else %}Criar{% endif %} Setor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if sector %}
+            <!-- Informações Adicionais -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Informações Adicionais</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Máquinas Associadas:</strong>
+                                <span class="badge bg-info">{{ sector.machines|length }}</span>
+                            </p>
+                            {% if sector.machines %}
+                            <ul class="small mb-0">
+                                {% for machine in sector.machines[:5] %}
+                                <li>{{ machine.name }} ({{ machine.code }})</li>
+                                {% endfor %}
+                                {% if sector.machines|length > 5 %}
+                                <li class="text-muted">... e mais {{ sector.machines|length - 5 }}</li>
+                                {% endif %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Utilizadores Associados:</strong>
+                                <span class="badge bg-secondary">{{ sector.users|length }}</span>
+                            </p>
+                            {% if sector.users %}
+                            <ul class="small mb-0">
+                                {% for user in sector.users[:5] %}
+                                <li>{{ user.full_name }} ({{ user.username }})</li>
+                                {% endfor %}
+                                {% if sector.users|length > 5 %}
+                                <li class="text-muted">... e mais {{ sector.users|length - 5 }}</li>
+                                {% endif %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr class="my-2">
+                    <small class="text-muted">
+                        Criado em: {{ sector.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% if sector.updated_at and sector.updated_at != sector.created_at %}
+                        | Atualizado em: {{ sector.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,28 +1,27 @@
 """
-Modelo de Máquina/Estação de Trabalho
+Modelo de Setor
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from config.database import Base
 
 
-class Machine(Base):
-    __tablename__ = "machines"
+class Sector(Base):
+    __tablename__ = "sectors"
 
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String(50), unique=True, index=True, nullable=False)
     name = Column(String(100), nullable=False)
     description = Column(Text)
     location = Column(String(100))
-    sector_id = Column(Integer, ForeignKey("sectors.id"), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relacionamentos
-    sector = relationship("Sector", back_populates="machines")
-    users = relationship("User", secondary="user_machines", back_populates="machines")
+    machines = relationship("Machine", back_populates="sector")
+    users = relationship("User", secondary="user_sectors", back_populates="sectors")
 
     def __repr__(self):
-        return f"<Machine {self.code} - {self.name}>"
+        return f"<Sector {self.code} - {self.name}>"

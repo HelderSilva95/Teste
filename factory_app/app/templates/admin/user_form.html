@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}{% if edit_user %}Editar Utilizador{% else %}Novo Utilizador{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>
+                    <i class="bi bi-person"></i>
+                    {% if edit_user %}Editar Utilizador{% else %}Novo Utilizador{% endif %}
+                </h2>
+                <a href="/admin/users" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+            <hr>
+
+            {% if request.query_params.get('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> {{ request.query_params.get('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <form method="post"
+                  action="{% if edit_user %}/admin/users/{{ edit_user.id }}/edit{% else %}/admin/users/new{% endif %}">
+
+                <!-- Dados Básicos -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Dados Básicos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">
+                                    Username <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="username" name="username"
+                                       value="{{ edit_user.username if edit_user else '' }}" required maxlength="50"
+                                       placeholder="Ex: jsilva">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">
+                                    Email <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       value="{{ edit_user.email if edit_user else '' }}" required maxlength="100"
+                                       placeholder="Ex: joao.silva@example.com">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">
+                                Nome Completo <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="full_name" name="full_name"
+                                   value="{{ edit_user.full_name if edit_user else '' }}" required maxlength="100"
+                                   placeholder="Ex: João Manuel Silva">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">
+                                    Password {% if not edit_user %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                <input type="password" class="form-control" id="password" name="password"
+                                       {% if not edit_user %}required{% endif %} minlength="6"
+                                       placeholder="{% if edit_user %}Deixe vazio para manter{% else %}Mínimo 6 caracteres{% endif %}">
+                                {% if edit_user %}
+                                <small class="form-text text-muted">Deixe vazio para manter a password atual</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="role" class="form-label">
+                                    Função <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="role" name="role" required>
+                                    {% for r in roles %}
+                                    <option value="{{ r.value }}"
+                                            {% if edit_user and edit_user.role == r %}selected{% endif %}>
+                                        {{ r.value.upper() }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                       {% if not edit_user or edit_user.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    Utilizador ativo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setores -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Setores Associados</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Selecione os setores onde o utilizador pode trabalhar
+                        </p>
+                        {% if sectors %}
+                        <div class="row">
+                            {% for sector in sectors %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="sector_{{ sector.id }}"
+                                           name="sector_ids"
+                                           value="{{ sector.id }}"
+                                           {% if edit_user and sector in edit_user.sectors %}checked{% endif %}>
+                                    <label class="form-check-label" for="sector_{{ sector.id }}">
+                                        <strong>{{ sector.code }}</strong> - {{ sector.name }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Nenhum setor disponível. <a href="/admin/sectors/new">Criar setor</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Máquinas -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Máquinas Associadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Selecione as máquinas que o utilizador pode operar
+                        </p>
+                        {% if machines %}
+                        <div class="row">
+                            {% for machine in machines %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="machine_{{ machine.id }}"
+                                           name="machine_ids"
+                                           value="{{ machine.id }}"
+                                           {% if edit_user and machine in edit_user.machines %}checked{% endif %}>
+                                    <label class="form-check-label" for="machine_{{ machine.id }}">
+                                        <strong>{{ machine.code }}</strong> - {{ machine.name }}
+                                        {% if machine.sector %}
+                                        <small class="text-muted">({{ machine.sector.code }})</small>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Nenhuma máquina disponível. <a href="/admin/machines/new">Criar máquina</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="d-flex justify-content-between">
+                    <a href="/admin/users" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        {% if edit_user %}Atualizar{% else %}Criar{% endif %} Utilizador
+                    </button>
+                </div>
+            </form>
+
+            {% if edit_user %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Informações Adicionais</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        Criado em: {{ edit_user.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% if edit_user.updated_at and edit_user.updated_at != edit_user.created_at %}
+                        | Atualizado em: {{ edit_user.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

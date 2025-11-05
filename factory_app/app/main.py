@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 
 from config.database import init_db
-from app.routes import auth, dashboard, work_orders, production, inventory, non_compliance, health, sql_import
+from app.routes import auth, dashboard, work_orders, production, inventory, non_compliance, health, sql_import, admin
 from utils.logger import logger
 
 # Criar aplicação FastAPI
@@ -27,6 +27,7 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(health.router)
 app.include_router(dashboard.router)
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(work_orders.router)
 app.include_router(production.router)
 app.include_router(inventory.router)
