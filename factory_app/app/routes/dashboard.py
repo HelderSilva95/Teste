@@ -52,11 +52,10 @@ async def dashboard(
             ProductionLog.status.in_([ProductionStatus.IN_PROGRESS, ProductionStatus.PAUSED])
         ).count(),
         "inventory_available": db.query(InventoryItem).filter(
-            InventoryItem.status == MaterialStatus.AVAILABLE,
-            InventoryItem.is_active == True
+            InventoryItem.status == MaterialStatus.DISPONIVEL
         ).count(),
         "nc_open": db.query(NonCompliance).filter(
-            NonCompliance.status.in_([NonComplianceStatus.OPEN, NonComplianceStatus.IN_ANALYSIS])
+            NonCompliance.status.in_([NonComplianceStatus.ABERTA, NonComplianceStatus.EM_ANALISE])
         ).count(),
     }
 
@@ -72,8 +71,8 @@ async def dashboard(
 
     # Não-conformidades recentes
     recent_ncs = db.query(NonCompliance).filter(
-        NonCompliance.status != NonComplianceStatus.CLOSED
-    ).order_by(NonCompliance.reported_at.desc()).limit(5).all()
+        NonCompliance.status != NonComplianceStatus.FECHADA
+    ).order_by(NonCompliance.detected_date.desc()).limit(5).all()
 
     return templates.TemplateResponse(
         "dashboard.html",

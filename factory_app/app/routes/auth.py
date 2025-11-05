@@ -92,6 +92,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optiona
         return None
 
     user = db.query(User).filter(User.username == username).first()
+    if not user or not user.is_active:
+        return None
     return user
 
 

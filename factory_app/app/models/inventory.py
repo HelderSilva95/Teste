@@ -1,5 +1,6 @@
 """
 Modelo de Inventário (Chapas e Maciços)
+NOTA: Alinhado com create_tables.sql
 """
 from sqlalchemy import Column, Integer, String, DateTime, Text, Enum, Float, Boolean
 from datetime import datetime
@@ -9,14 +10,16 @@ import enum
 
 class MaterialType(enum.Enum):
     CHAPA = "chapa"
-    MACICO = "maciço"
+    SOLIDO = "solido"
+    MATERIA_PRIMA = "materia_prima"
+    OUTRO = "outro"
 
 
 class MaterialStatus(enum.Enum):
-    AVAILABLE = "available"
-    IN_USE = "in_use"
-    CONSUMED = "consumed"
-    RESERVED = "reserved"
+    DISPONIVEL = "disponivel"
+    RESERVADO = "reservado"
+    EM_USO = "em_uso"
+    CONSUMIDO = "consumido"
 
 
 class InventoryItem(Base):
@@ -29,31 +32,20 @@ class InventoryItem(Base):
     # Informações do material
     material_name = Column(String(100), nullable=False)  # Ex: Granito, Mármore, etc.
     color = Column(String(50))
-    finish = Column(String(50))  # Polido, Amaciado, etc.
-
-    # Dimensões
-    length = Column(Float)  # Comprimento (cm)
-    width = Column(Float)   # Largura (cm)
+    dimensions = Column(String(100))  # Ex: "300x200x2cm"
     thickness = Column(Float)  # Espessura (cm)
 
     # Quantidade e Unidade
     quantity = Column(Float, default=1)
-    unit = Column(String(20), default="UN")
+    unit = Column(String(10), default="UN")
 
     # Localização e Status
     location = Column(String(100))  # Local físico no armazém
-    status = Column(Enum(MaterialStatus), default=MaterialStatus.AVAILABLE, nullable=False)
-
-    # Fornecedor e Lote
     supplier = Column(String(100))
-    batch_number = Column(String(50))
-
-    # Datas
-    received_date = Column(DateTime)
-    last_used_date = Column(DateTime)
+    entry_date = Column(DateTime, default=datetime.utcnow)
+    status = Column(Enum(MaterialStatus), default=MaterialStatus.DISPONIVEL, nullable=False)
 
     notes = Column(Text)
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

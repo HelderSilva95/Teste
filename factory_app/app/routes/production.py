@@ -9,7 +9,7 @@ from typing import Optional
 from datetime import datetime
 
 from config.database import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.production_log import ProductionLog, ProductionStatus
 from app.models.work_order import WorkOrder
 from app.models.machine import Machine
@@ -104,8 +104,18 @@ async def start_production_form(
         WorkOrder.status.in_(["pending", "in_progress"])
     ).all()
 
-    machines = db.query(Machine).filter(Machine.is_active == True).all()
-    operators = db.query(User).filter(User.is_active == True).all()
+    # Filtrar máquinas: se user tem máquinas específicas, mostrar apenas essas
+    if user.machines:
+        machines = user.machines
+    else:
+        # Se não tem restrição, mostrar todas ativas
+        machines = db.query(Machine).filter(Machine.is_active == True).all()
+
+    # Operadores: apenas ativos com role operador
+    operators = db.query(User).filter(
+        User.is_active == True,
+        User.role.in_([UserRole.OPERADOR, UserRole.SUPERVISOR])
+    ).all()
 
     selected_order = None
     if work_order_id:
@@ -137,11 +147,43 @@ async def start_production(
 ):
     """Inicia uma produção"""
     try:
+        # Validar Work Order
         work_order = db.query(WorkOrder).filter(WorkOrder.id == work_order_id).first()
         if not work_order:
             log_user_action(user.id, user.username, "START_PRODUCTION_FAILED",
                           f"WorkOrder ID:{work_order_id} não encontrada")
             raise HTTPException(status_code=404, detail="Ordem de trabalho não encontrada")
+
+        if work_order.status.value == "completed":
+            raise HTTPException(status_code=400, detail="Ordem de trabalho já está completa")
+
+        # Validar Máquina não está em uso
+        existing_production = db.query(ProductionLog).filter(
+            ProductionLog.machine_id == machine_id,
+            ProductionLog.status.in_([ProductionStatus.IN_PROGRESS, ProductionStatus.PAUSED])
+        ).first()
+
+        if existing_production:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Máquina já está em uso na produção #{existing_production.id}"
+            )
+
+        # Validar Operadores diferentes
+        if operator2_id and operator2_id == operator1_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Operador 2 deve ser diferente do Operador 1"
+            )
+
+        # Validar permissões do utilizador (se tiver máquinas associadas)
+        if user.machines:  # Se user tem máquinas específicas
+            machine_ids = [m.id for m in user.machines]
+            if machine_id not in machine_ids:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Não tem permissão para operar esta máquina"
+                )
 
         production_log = ProductionLog(
             work_order_id=work_order_id,
